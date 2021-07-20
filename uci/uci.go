@@ -5,14 +5,14 @@ import (
 	"os/exec"
 	"fmt"
 	"log"
-    "regexp"
     "strings"
 )
 
 // Result holds the score infromation 	
 type Results struct {
-	Score          int       // score centipawns or mate in X if Mate is true
-	Mate           bool      // whether this move results in forced mate
+    cp1            int       // score centipawns or mate in X if Mate is true
+    cp2            int
+	Mate           int      // whether this move results in forced mate
 	BestMove       string  // best line for this result
 }
 
@@ -25,9 +25,6 @@ type Engine struct {
 	stdin  *bufio.Writer
 }
 
-
-var reInfo = regexp.MustCompile(`info depth (?P<depth>\d+) seldepth [0-9]+ multipv (?P<multipv>\d+) score cp (?P<cp>\d+)`)
-var groups = reInfo.SubexpNames()
 
 // NewEngine returns an Engine it has spun up
 // and connected communication to
@@ -47,24 +44,8 @@ func NewEngine(path string) (*Engine, error) {
 	}
 	eng.stdin = bufio.NewWriter(stdin)
 	eng.stdout = bufio.NewReader(stdout)
-	
-	return &eng, nil
-}
 
-// SetOptions sends setoption commands to the Engine
-// for the values set in the Options record passed in
-func (eng *Engine) SetOptions() error {
-	//TODO: explore and set values for stockfish
-	return nil
-}
-
-func (eng *Engine) sendOption(name string, value interface{}) error {
-	_, err := eng.stdin.WriteString(fmt.Sprintf("setoption name %s value %v\n", name, value))
-	if err != nil {
-		return err
-	}
-	err = eng.stdin.Flush()
-	return err
+    return &eng, nil
 }
 
 // SetFEN takes a FEN string and tells the engine to set the position
@@ -74,8 +55,12 @@ func (eng *Engine) SetFEN(fen string) error {
 		return err
 	}
 	err = eng.stdin.Flush()
+    if err != nil {
+		return err
+	}
 	return err
 }
+
 
 // Go recieves to depth p0 and p1 and return the score at 
 // each depth, p0 < p1 is assumed.
@@ -83,13 +68,13 @@ func (eng *Engine) Go(p0, p1 int) (error) {
 	_, err := eng.stdin.WriteString(fmt.Sprintf("go depth %d\n", p1))
 	if err != nil {
 		return err
-    }	
+    }
 
     err = eng.stdin.Flush()
 	if err != nil {
 		return err
 	}
-    
+
     for {
         line, err := eng.stdout.ReadString('\n')
 		if err != nil {
@@ -103,7 +88,7 @@ func (eng *Engine) Go(p0, p1 int) (error) {
         match := reInfo.FindStringSubmatch(s)
         m := map[string]string{}
         for i, n := range(match) {
-            m[groups[i]] = n        
+            m[groups[i]] = n
         }
         fmt.Println(m["depth"])
         fmt.Println(m["cp"])
@@ -124,3 +109,32 @@ func (eng *Engine) Close() {
 	eng.cmd.Wait()
 }
 
+//var reInfo = regexp.MustCompile(`info depth (?P<depth>\d+) seldepth [0-9]+ multipv \d+ score cp (?P<cp>\d+)`)
+//var groups = reInfo.SubexpNames()
+//
+//type Expr interface{
+//    isExpr()
+//
+//}
+//
+//type FinalLine bool
+//
+//    final bool,
+//    struct content {
+//        depth   int,
+//        cp      int,
+//        variant string,
+//    }
+//}
+//
+//func parseLine(line string) uciLine {
+//    match := reInfo.FindStringSubmatch(line)
+//    m := map[string]string{}
+//    for i, n := range(match) {
+//        m[groups[i]] = n
+//    }
+//    depth,_ = strconv.Atoi(m["depth"])
+//    cp,_    = strconv.Atoi(m["cp"])
+//
+//    return
+//}
