@@ -5,17 +5,16 @@ import (
 )
 
 func TestParseLine(t *testing.T){
-    var final Final = true
 
     tests := []struct{
         name    string
         got     string
-        expr    Expr
+        expr    UCIString
     }{
         {
             name: "Initial line",
             got:  "info string NNUE evaluation using nn-82215d0fd0df.nnue enabled",
-            expr:  Data{ depth: -1, cp: 0, variant: ""},
+            expr:  Neither(struct{}{}),
         },
         {
             name: "First line",
@@ -30,14 +29,31 @@ func TestParseLine(t *testing.T){
         {
             name: "Final line",
             got: "bestmove c2c4 ponder e7e5",
-            expr: final,
+            expr: Final(true),
         },
     }
 
     for _, tt := range tests {
-        expr := parseLine(tt.got)
-
+        got := ParseLine(tt.got)
         t.Run(tt.name, func (t *testing.T){
+            switch got.(type) {
+                case Final:{
+                    if (got != tt.expr){
+                        t.Errorf("Wanted %b but got %b for string %s",tt.expr, got, tt.got)
+                    }
+                }
+                case Data:{
+                    if (got.(Data).cp != tt.expr.(Data).cp){
+                        t.Errorf("Wanted %d but got %d for string %s",tt.expr.(Data).cp, got.(Data).cp, tt.got)
+                    }
+                    if (got.(Data).depth != tt.expr.(Data).depth){
+                        t.Errorf("Wanted %d but got %d for string %s",tt.expr.(Data).depth, got.(Data).depth, tt.got)
+                    }
+                    if (got.(Data).variant != tt.expr.(Data).variant){
+                        t.Errorf("Wanted %s but got %s for string %s",tt.expr.(Data).variant, got.(Data).variant, tt.got)
+                    }
+                }
+            }
         })
     }
 }
