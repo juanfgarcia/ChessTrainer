@@ -48,6 +48,9 @@ func NewEngine(path string) (*Engine, error) {
     return &eng, nil
 }
 
+func (eng *Engine) SetOption() error {
+    return nil
+}
 // SetFEN takes a FEN string and tells the engine to set the position
 func (eng *Engine) SetFEN(fen string) error {
 	_, err := eng.stdin.WriteString(fmt.Sprintf("position fen %s\n", fen))
