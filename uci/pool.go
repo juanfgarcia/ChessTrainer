@@ -11,7 +11,7 @@ type Work struct {
 }
 
 type Worker struct {
-    eng *uci.Engine
+    eng *Engine
     m *sync.Mutex
 	WorkerChannel chan chan Work // used to communicate between dispatcher and workers
 	Channel chan Work
@@ -20,7 +20,7 @@ type Worker struct {
 
 // start worker
 func (w *Worker) Start() {
-    eng, _ := uci.NewEngine("../ChessTrainer/uci/stockfish12")
+    eng, _ := NewEngine("../ChessTrainer/uci/stockfish12")
     w.eng = eng
 
 	go func() {
